@@ -1,7 +1,8 @@
 use egui::Ui;
+use figment::value;
 
 // Helper to get cached values from the interface
-pub fn get_cache_value<T>(id: &str, ui: &mut Ui) -> T
+pub fn get_cache_value<T>(id: &str, ui: &mut Ui, default: Option<T>) -> T
 where
     T: Default + Clone + Send + Sync + 'static,
 {
@@ -9,7 +10,10 @@ where
         writer
             .data
             .get_temp_mut_or_insert_with((id.to_owned() + "v").into(), || -> T {
-                Default::default()
+                match default {
+                    Some(value) => value,
+                    None => T::default(),
+                }
             })
             .to_owned()
     })
