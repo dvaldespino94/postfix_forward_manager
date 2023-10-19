@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use eframe::{App, CreationContext};
+use eframe::{App, CreationContext, NativeOptions};
 use egui::{Vec2, WidgetText};
 
 use egui_toast::{Toast, ToastKind, ToastOptions, Toasts};
@@ -14,7 +14,10 @@ use figment::{
     Figment,
 };
 
-use crate::application::backend::server::{AuthStatus, UsersStatus};
+use crate::application::{
+    backend::server::{AuthStatus, UsersStatus},
+    errorapplication::ErrorApplication,
+};
 
 use self::backend::{
     backend_loop,
@@ -25,6 +28,7 @@ use self::backend::{
 };
 
 mod backend;
+mod errorapplication;
 mod login_ui;
 mod main_ui;
 
@@ -177,7 +181,21 @@ impl App for Application {
 
 impl Application {
     // Create a new instance of the application
-    pub fn new(ctx: &CreationContext) -> Self {
+    pub fn new(ctx: &CreationContext) -> Box<dyn App> {
+        // Load configuration from TOML
+        let config: Configuration = match Figment::new().merge(Toml::file("config.toml")).extract()
+        {
+            Ok(config) => config,
+            Err(error) => {
+                log::error!("Error loading configuration: {error:#?}");
+
+                return ErrorApplication::new(format!(
+                    "Error loading configuration: {}",
+                    error.to_string()
+                ));
+            }
+        };
+
         // Spawn a thread that forces to update the ui every 200ms
         log::trace!("Spawning extra update thread");
 
@@ -189,12 +207,6 @@ impl Application {
                 ctx_clone.request_repaint();
             }
         });
-
-        // Load configuration from TOML
-        let config: Configuration = Figment::new()
-            .merge(Toml::file("config.toml"))
-            .extract()
-            .unwrap_or_default();
 
         // Create the channels to communicate with the backend thread
 
@@ -220,7 +232,7 @@ impl Application {
         });
 
         // Return the initialized Application instance
-        Self {
+        let application = Self {
             // TX Channel
             tx: frontend_tx,
             // RX Channel
@@ -236,7 +248,9 @@ impl Application {
             // Server list(loaded from configuration)
             servers: config.servers,
             toasts: Toasts::new(),
-        }
+        };
+
+        Box::new(application)
     }
 
     fn get_server(&mut self, server: &Server) -> Option<&mut Server> {

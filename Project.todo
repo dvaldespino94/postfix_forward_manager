@@ -8,5 +8,5 @@
 //DONE: Move extra update thread to Application::new()
 //DONE: Add error notifications to main ui
 //DONE: Backup configuration before uploading to server
-//TODO: Show error when configuration is not found
-//TODO: Remove Configuration's Default trait implementation
+//DONE: Show error when configuration is not found
+//DONE: Remove Configuration's Default trait implementation

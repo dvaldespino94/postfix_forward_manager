@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             icon_data: Some(load_icon(include_bytes!("../icon.png").to_vec())),
             ..Default::default()
         },
-        Box::new(|ctx| Box::new(application::Application::new(ctx))),
+        Box::new(|ctx| application::Application::new(ctx)),
     )?;
 
     log::trace!("Done");
