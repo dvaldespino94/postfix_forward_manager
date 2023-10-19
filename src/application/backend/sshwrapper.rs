@@ -201,7 +201,7 @@ impl SSHWrapper {
 
         // Send and execute the command:
         shell.write(
-            format!("su root -c 'cp /tmp/{configuration_filename} {configuration_full_path}'\n")
+            format!("su root -c 'cp /tmp/{configuration_filename} {configuration_full_path}; /etc/postfix/post_update'\n")
                 .as_bytes(),
         )?;
 

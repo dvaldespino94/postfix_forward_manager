@@ -6,7 +6,7 @@ use std::{
 };
 
 use eframe::{App, CreationContext};
-use egui::{include_image, TextureOptions, Vec2};
+use egui::Vec2;
 use figment::{
     providers::{Format, Toml},
     Figment,
@@ -167,7 +167,7 @@ impl App for Application {
 
 impl Application {
     // Create a new instance of the application
-    pub fn new(ctx: &CreationContext) -> Self {
+    pub fn new(_: &CreationContext) -> Self {
         // Load configuration from TOML
         let config: Configuration = Figment::new()
             .merge(Toml::file("config.toml"))
