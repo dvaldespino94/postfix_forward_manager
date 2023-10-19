@@ -43,6 +43,10 @@ impl Server {
 
         payload
     }
+
+    pub fn to_string_extended(&self) -> String {
+        format!("{}:{}:{}", self.addr, self.port, self.config_path)
+    }
 }
 
 // Simple way to represent the server for debuging reasons mainly

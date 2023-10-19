@@ -111,19 +111,16 @@ impl App for Application {
                     }
                 }
                 // Handle received virtual users hash
-                ResponseMessage::GotVirtualUsers {
-                    server: server_str,
-                    users,
-                } => {
-                    log::trace!("Got virtual users from server {server_str}");
+                ResponseMessage::GotVirtualUsers { server, users } => {
+                    log::trace!("Got virtual users from server {server}: {users:#?}");
 
                     // Match the received server instance with the server instances owned by the application
-                    for server in self.servers.iter_mut() {
-                        if server == &server_str {
+                    for owned_server in self.servers.iter_mut() {
+                        if *owned_server == server {
                             // Raise the flag
-                            server.received_redirections = true;
+                            owned_server.received_redirections = true;
                             // Assign the users
-                            server.users = users;
+                            owned_server.users = users;
                             break;
                         }
                     }
@@ -136,7 +133,7 @@ impl App for Application {
                 // Handle the result of server configuration uploads
                 ResponseMessage::ServerUploadResult { error, server } => {
                     for owned_server in self.servers.iter_mut() {
-                        if owned_server.to_string() == server {
+                        if owned_server == &server {
                             owned_server.busy = false;
                             break;
                         }

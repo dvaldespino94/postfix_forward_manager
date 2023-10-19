@@ -198,7 +198,6 @@ impl SSHWrapper {
         // Create a shell so we can escalate privileges into root
         let mut shell = client.open_shell()?;
         // Read and discard the bash banner
-        let _ = shell.read();
 
         // Send and execute the command:
         shell.write(
@@ -207,12 +206,10 @@ impl SSHWrapper {
         )?;
 
         // Sleep for a while until the prompt is shown
-        std::thread::sleep(Duration::from_millis(200));
-        // Discard the command echo
-        let _ = shell.read();
-        // Wait for the 'password:' prompt
-        let _ = shell.read();
+        std::thread::sleep(Duration::from_millis(500));
         shell.write((self.root_password.clone() + "\n").as_bytes())?;
+        // Sleep for a while until the file is properly modified
+        std::thread::sleep(Duration::from_millis(500));
 
         // Create a scp client to download the allegedly uploaded configuration
         let scp = client.open_scp()?;

@@ -32,7 +32,7 @@ pub enum ResponseMessage {
     },
     // The server upload process finished
     ServerUploadResult {
-        server: String,
+        server: Server,
         error: Option<String>,
     },
     // Result for the authentication process

@@ -23,7 +23,7 @@ pub fn backend_loop(
             QueryMessage::QueryVirtualUsers(server) => {
                 log::trace!("Requested virtual users for server {server}");
 
-                if let Some(session) = ssh_sessions.get_mut(&server.to_string()) {
+                if let Some(session) = ssh_sessions.get_mut(&server.to_string_extended()) {
                     match session.get_virtual_users() {
                         Ok(users) => {
                             let _ = tx.send(ResponseMessage::GotVirtualUsers {
@@ -80,17 +80,17 @@ pub fn backend_loop(
                             });
                         }
                     }
-                    ssh_sessions.insert(server.to_string(), wrapper);
+                    ssh_sessions.insert(server.to_string_extended(), wrapper);
                 }
             }
             QueryMessage::UpdateVirtualUsers(server) => {
                 let server = &server;
                 for (key, session) in ssh_sessions {
-                    if &server.to_string() == key {
+                    if &server.to_string_extended() == key {
                         let error = session.upload_configuration(server.clone()).err();
 
                         let _ = tx.send(ResponseMessage::ServerUploadResult {
-                            server: server.to_string(),
+                            server: server.clone(),
                             error: error.map(|x| x.to_string()),
                         });
                         break;
