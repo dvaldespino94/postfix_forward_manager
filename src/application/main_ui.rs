@@ -35,28 +35,34 @@ impl Application {
             ui.add_space(10.0);
             ui.separator();
 
-            // Iterate over the servers and add the buttons
-            for (index, server) in self.servers.iter().enumerate() {
-                // Show in green the selected server's button
-                ui.visuals_mut().override_text_color = if selected_server == index {
-                    Some(Color32::GREEN)
-                } else {
-                    None
-                };
+            // Add a scroll so there can be as many servers as needed
+            egui::ScrollArea::horizontal()
+                .id_source("servers")
+                .show(ui, |ui| {
 
-                // Add the button
-                if ui
-                    .small_button(&server.addr)
-                    // Tooltip for the button(the server's configuration path)
-                    .on_hover_text(&server.config_path)
-                    .clicked()
-                {
-                    // Handle click:
-                    // Set the variable and save it to the cache
-                    selected_server = index;
-                    set_cache_value("current_server", ui, selected_server);
-                }
-            }
+                    // Iterate over the servers and add the buttons
+                    for (index, server) in self.servers.iter().enumerate() {
+                        // Show in green the selected server's button
+                        ui.visuals_mut().override_text_color = if selected_server == index {
+                            Some(Color32::GREEN)
+                        } else {
+                            None
+                        };
+
+                        // Add the button
+                        if ui
+                            .small_button(&server.addr)
+                            // Tooltip for the button(the server's configuration path)
+                            .on_hover_text(&server.config_path)
+                            .clicked()
+                        {
+                            // Handle click:
+                            // Set the variable and save it to the cache
+                            selected_server = index;
+                            set_cache_value("current_server", ui, selected_server);
+                        }
+                    }
+                });
         });
 
         // Initialize a list of possible modifications, tipically there will be only one per iteration, but the door is open
