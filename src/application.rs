@@ -89,7 +89,7 @@ impl App for Application {
                             .all(|server| server.auth_status == AuthStatus::Authenticated)
                         {
                             // Resize window
-                            frame.set_window_size(Vec2::new(400.0, 500.0));
+                            frame.set_window_size(Vec2::new(410.0, 500.0));
 
                             // Switch to main view
                             self.screen = Screen::Main;

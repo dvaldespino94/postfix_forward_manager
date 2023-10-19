@@ -15,7 +15,11 @@ impl Application {
         frame.set_window_size(Vec2::new(400.0, 135.0));
 
         egui::TopBottomPanel::top("topbar").show(ctx, |ui| {
-            ui.heading("Login");
+            ui.horizontal(|ui| {
+                ui.heading("Login");
+                ui.add_space(180.0);
+                ui.small("Nodo Nacional de Gases Industriales");
+            });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -31,7 +35,7 @@ impl Application {
 
             // Password text input
             ui.horizontal(|ui| {
-                let label_width = ui.label("Password:").rect.width();
+                let label_width = ui.label("Contraseña:").rect.width();
                 ui.add(
                     egui::TextEdit::singleline(&mut self.password)
                         .desired_width(available_width - label_width)
@@ -41,7 +45,7 @@ impl Application {
 
             // Root password text input
             ui.horizontal(|ui| {
-                let label_width = ui.label("Root Password:").rect.width();
+                let label_width = ui.label("Contraseña del root:").rect.width();
                 ui.add(
                     egui::TextEdit::singleline(&mut self.root_password)
                         .desired_width(available_width - label_width)

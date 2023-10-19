@@ -1,7 +1,7 @@
 use std::{borrow::BorrowMut, error::Error};
 
 use eframe::Frame;
-use egui::{Color32, Context, RichText, Vec2};
+use egui::{Color32, Context, Vec2};
 
 use crate::{
     application::{backend::server::UsersStatus, QueryMessage},
@@ -27,7 +27,7 @@ impl Application {
     pub fn draw_main(&mut self, ctx: &Context, _: &mut Frame) -> Result<(), Box<dyn Error>> {
         egui::CentralPanel::default().show(ctx, |ui| {
             // Simple variable to hold the selected server instance's index
-            let mut selected_server: usize = get_cache_value("current_server", ui);
+            let mut selected_server: usize = get_cache_value("current_server", ui, Some(0));
 
             let some_server_is_busy = self.servers.iter().any(|x| x.busy());
 
@@ -74,7 +74,6 @@ impl Application {
             {
                 if self.servers[selected_server].users_status != UsersStatus::Unknown {
                     ui.separator();
-                    ui.add_space(20.0);
 
                     // A little heading
                     ui.horizontal(|ui| {
@@ -127,27 +126,37 @@ impl Application {
                         let redirections = server_redirections.get(mail).unwrap();
 
                         // Show the data grouped(This is more appealing)
-                        ui.group(|ui| {
+                        ui.collapsing(mail, |ui| {
                             // Make the group allocate the whole horizontal space, so it's uniform
                             ui.allocate_space(Vec2::new(ui.available_width(), 0.0));
                             // Horizontal widget to hold the email and the delete button
                             ui.horizontal(|ui| {
-                                let label: RichText = mail.into();
+                                let mut email: String = get_cache_value(
+                                    &(mail.to_owned() + "e"),
+                                    ui,
+                                    Some(mail.to_owned()),
+                                );
+                                if ui.text_edit_singleline(&mut email).changed() {
+                                    set_cache_value(&(mail.to_owned() + "e"), ui, email.clone());
+                                }
 
-                                // Show the label in red if there is no redirection(it's invalid and shouldn't be uploaded to server)
-                                ui.strong(label.size(14.0).color(if redirections.is_empty() {
-                                    Color32::RED
-                                } else {
-                                    ui.visuals().text_color().gamma_multiply(1.5)
-                                }));
-
-                                ui.add_space(10.0);
+                                if ui.small_button("Cambiar").clicked() {
+                                    modifications.push(Modification::UpdateEmail {
+                                        email,
+                                        redirections: redirections.clone(),
+                                    });
+                                    modifications.push(Modification::RemoveEmail(mail.to_owned()));
+                                }
+                                // ui.add_space(40.0);
                                 // Add the delete button
-                                if ui.small_button("eliminar").clicked() {
+                                if ui.small_button("❌").clicked() {
                                     log::trace!("Removing entry");
                                     modifications.push(Modification::RemoveEmail(mail.to_owned()));
                                 }
                             });
+
+                            ui.add_space(10.0);
+                            ui.label("Redirecciones");
 
                             // Iterate over the redirections, adding the entries
                             for redir in redirections {
@@ -178,7 +187,7 @@ impl Application {
                             }
 
                             // Get a temporary input string that will hold the text for the text input for that email
-                            let mut temp_input: String = get_cache_value(mail, ui);
+                            let mut temp_input: String = get_cache_value(mail, ui, None);
 
                             ui.separator();
                             // Add a small label
@@ -227,7 +236,7 @@ impl Application {
                     // The horizontal widget that holds the input and the button
                     ui.horizontal(|ui| {
                         // This holds the user input(cached value)
-                        let mut email: String = get_cache_value("email", ui);
+                        let mut email: String = get_cache_value("email", ui, None);
 
                         // Update the value only if the user changes the text
                         if ui.text_edit_singleline(&mut email).changed() {

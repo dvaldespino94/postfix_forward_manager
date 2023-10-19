@@ -1,7 +1,6 @@
 #![windows_subsystem = "windows"]
 
 use eframe::IconData;
-use egui::Vec2;
 use std::error::Error;
 mod application;
 mod cache_utils;
@@ -15,7 +14,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         "Email Forwarding Manager",
         eframe::NativeOptions {
             resizable: true,
-            initial_window_size: Some(Vec2::new(400.0, 500.0)),
             icon_data: Some(load_icon(include_bytes!("../icon.png").to_vec())),
             ..Default::default()
         },

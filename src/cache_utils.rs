@@ -1,5 +1,4 @@
 use egui::Ui;
-use figment::value;
 
 // Helper to get cached values from the interface
 pub fn get_cache_value<T>(id: &str, ui: &mut Ui, default: Option<T>) -> T
