@@ -63,26 +63,6 @@ impl App for Application {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         self.toasts.show(ctx);
 
-        // Spawn a thread that forces to update the ui every 200ms
-        ctx.memory_mut(|mem| {
-            let already_started: &mut bool = mem
-                .data
-                .get_temp_mut_or_default("already_instantiated".into());
-            if !*already_started {
-                log::trace!("Spawning extra update thread");
-
-                let ctx = ctx.clone();
-                std::thread::spawn(move || {
-                    let ctx_clone = ctx.clone();
-                    loop {
-                        std::thread::sleep(Duration::from_millis(200));
-                        ctx_clone.request_repaint();
-                    }
-                });
-                *already_started = true;
-            }
-        });
-
         // Receive and process messages from the backend (different thread)
         if let Ok(msg) = self.rx.try_recv() {
             match msg {
@@ -197,7 +177,19 @@ impl App for Application {
 
 impl Application {
     // Create a new instance of the application
-    pub fn new(_ctx: &CreationContext) -> Self {
+    pub fn new(ctx: &CreationContext) -> Self {
+        // Spawn a thread that forces to update the ui every 200ms
+        log::trace!("Spawning extra update thread");
+
+        let ctx = ctx.egui_ctx.clone();
+        std::thread::spawn(move || {
+            let ctx_clone = ctx.clone();
+            loop {
+                std::thread::sleep(Duration::from_millis(200));
+                ctx_clone.request_repaint();
+            }
+        });
+
         // Load configuration from TOML
         let config: Configuration = Figment::new()
             .merge(Toml::file("config.toml"))

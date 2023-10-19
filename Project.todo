@@ -5,5 +5,5 @@
 //DONE: Add error notifications to login
 //DONE: Allow the user to re-try if authentication fails
 //DONE: Add flag to Server struct to signal status of 'users' list
-//TODO: Move extra update thread to Application::new()
+//DONE: Move extra update thread to Application::new()
 //DONE: Add error notifications to main ui
