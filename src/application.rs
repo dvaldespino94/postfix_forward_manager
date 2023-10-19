@@ -6,7 +6,7 @@ use std::{
 };
 
 use eframe::{App, CreationContext};
-use egui::{Vec2, WidgetText};
+use egui::{Align2, Pos2, Vec2, WidgetText};
 
 use egui_toast::{Toast, ToastKind, ToastOptions, Toasts};
 use figment::{
@@ -108,10 +108,6 @@ impl App for Application {
                             format!("Authentication failed\nfor server {server}").into(),
                             ToastKind::Error,
                         );
-                        // self.toasts
-                        //     .error(format!("Authentication failed for server {server}"))
-                        //     .set_closable(true)
-                        //     .set_duration(Some(Duration::from_secs(3)));
                         log::error!(
                             "Authentication failed for server {server}: '{}'",
                             error.unwrap_or_default()
@@ -244,7 +240,8 @@ impl Application {
             screen: Default::default(),
             // Server list(loaded from configuration)
             servers: config.servers,
-            toasts: Toasts::new(),
+            // Toasts 🍞
+            toasts: Toasts::new().anchor(Align2::RIGHT_TOP, Pos2::new(-5.0, 5.0)),
         };
 
         Box::new(application)
@@ -267,6 +264,7 @@ impl Application {
             || self.username.trim().is_empty())
     }
 
+    // Helper to show notifications
     fn show_notification(&mut self, message: WidgetText, kind: ToastKind) {
         self.toasts.add(Toast {
             kind,
