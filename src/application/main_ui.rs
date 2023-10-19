@@ -3,7 +3,7 @@ use std::{borrow::BorrowMut, error::Error};
 use egui::{Color32, RichText, Vec2};
 
 use crate::{
-    application::QueryMessage,
+    application::{backend::server::UsersStatus, QueryMessage},
     cache_utils::{get_cache_value, set_cache_value},
 };
 
@@ -65,8 +65,7 @@ impl Application {
 
         // This is scoped so the self.servers borrow is released after the scope is exited
         {
-            // If the server got it's redirections(This check will be removed soon)
-            if self.servers[selected_server].received_redirections {
+            if self.servers[selected_server].users_status != UsersStatus::Unknown {
                 // A little heading
                 ui.horizontal(|ui| {
                     ui.heading("Redirecciones de correos");
@@ -83,8 +82,7 @@ impl Application {
                                 log::trace!("Saving...");
 
                                 // Mark the server as busy
-                                //TODO: Mark as busy
-                                // self.servers[selected_server].busy = true;
+                                self.servers[selected_server].users_status = UsersStatus::Uploading;
 
                                 // Send a query to the backend, so it handles the heavy stuffs
                                 let _ = self.tx.send(QueryMessage::UpdateVirtualUsers(
@@ -95,7 +93,11 @@ impl Application {
                     );
 
                     // Show a spinner if the backend is still uploading the data to the server
-                    if self.servers.iter().any(|x| x.busy()) {
+                    if self
+                        .servers
+                        .iter()
+                        .any(|x| x.users_status == UsersStatus::Uploading)
+                    {
                         ui.spinner();
                     }
                 });
@@ -206,7 +208,7 @@ impl Application {
             });
 
             // If the server's data hasn't arrived yet show a spinner and a label indicating so
-            if !self.servers[selected_server].received_redirections {
+            if self.servers[selected_server].users_status == UsersStatus::Downloading {
                 ui.heading("Esperando información del servidor...");
                 ui.spinner();
             } else {

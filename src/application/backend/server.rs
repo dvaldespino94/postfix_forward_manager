@@ -29,6 +29,20 @@ impl From<bool> for AuthStatus {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum UsersStatus {
+    Unknown,
+    Downloading,
+    Idle,
+    Uploading,
+}
+
+impl Default for UsersStatus {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 // Struct to hold information about the servers and throw it around between threads
 #[derive(Clone, Deserialize)]
 pub struct Server {
@@ -43,17 +57,13 @@ pub struct Server {
     #[serde(skip)]
     pub users: HashMap<String, Vec<String>>,
 
-    // Flags if the data has already been filled from the server
-    #[serde(skip)]
-    pub received_redirections: bool,
-
     // Authentication status
     #[serde(skip)]
     pub auth_status: AuthStatus,
 
-    // Flag to check if the server is still working
+    // Authentication status
     #[serde(skip)]
-    pub is_busy: bool,
+    pub users_status: UsersStatus,
 }
 
 // Compare two server instances, only taking into account the path, address and port
@@ -78,8 +88,10 @@ impl Server {
         format!("{}:{}:{}", self.addr, self.port, self.config_path)
     }
 
-    pub fn busy(&self)->bool{
-        self.auth_status==AuthStatus::InProgress
+    pub fn busy(&self) -> bool {
+        self.auth_status == AuthStatus::InProgress
+            || self.users_status == UsersStatus::Downloading
+            || self.users_status == UsersStatus::Uploading
     }
 }
 

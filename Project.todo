@@ -4,5 +4,6 @@
 //DONE: Reload postfix configuration on target servers (run /etc/postfix/postfix_update)
 //DONE: Add error notifications to login
 //DONE: Allow the user to re-try if authentication fails
+//DONE: Add flag to Server struct to signal status of 'users' list
 //TODO: Move extra update thread to Application::new()
-//TODO: Add error notifications to main ui
+//DONE: Add error notifications to main ui

@@ -7,11 +7,13 @@ use std::{
 
 use eframe::{App, CreationContext};
 use egui::{FontFamily, Vec2};
-use egui_notify::{Toast, Toasts};
+use egui_notify::Toasts;
 use figment::{
     providers::{Format, Toml},
     Figment,
 };
+
+use crate::application::backend::server::{AuthStatus, UsersStatus};
 
 use self::backend::{
     backend_loop,
@@ -96,15 +98,26 @@ impl App for Application {
 
                     if success {
                         log::trace!("Authentication result for server {server}: {success}");
-                        if !self.servers.iter().any(|server| server.busy()) {
+                        if self
+                            .servers
+                            .iter()
+                            .all(|server| server.auth_status == AuthStatus::Authenticated)
+                        {
                             // Resize window
                             frame.set_window_size(Vec2::new(400.0, 500.0));
 
                             // Switch to main view
                             self.screen = Screen::Main;
                         }
+
                         // Query virtual users for this server
-                        let _ = self.tx.send(QueryMessage::QueryVirtualUsers(server));
+                        let _ = self
+                            .tx
+                            .send(QueryMessage::QueryVirtualUsers(server.clone()));
+                        self.get_server(&server).map(|s| {
+                            log::trace!("Setting server to busy again");
+                            s.users_status = UsersStatus::Downloading;
+                        });
                     } else {
                         self.toasts
                             .error(format!("Authentication failed for server {server}"))
@@ -123,11 +136,15 @@ impl App for Application {
                     // Match the received server instance with the server instances owned by the application
                     self.get_server(&server).map(|s| {
                         s.users = users;
-                        s.received_redirections = true;
+                        s.users_status = UsersStatus::Idle;
                     });
                 }
                 // Handle the case when the query fails
                 ResponseMessage::QueryVirtualUsersResult { server, error } => {
+                    self.get_server(&server).map(|s| {
+                        s.users_status = UsersStatus::Unknown;
+                    });
+
                     self.toasts
                         .error(format!(
                             "Couldn't upload configuration to server {server}: {error}"
@@ -138,17 +155,18 @@ impl App for Application {
                 }
                 // Handle the result of server configuration uploads
                 ResponseMessage::ServerUploadResult { error, server } => {
-                    // self.get_server(&server).map(|s| {
-                    //     log::trace!("Setting server to not busy");
-                    //     s.busy = false;
-                    // });
+                    self.get_server(&server).map(|s| {
+                        s.users_status = UsersStatus::Idle;
+                    });
 
                     if let Some(error) = error {
                         log::error!("Error uploading data to server {server}: {error}");
                         self.toasts
                             .error(format!("Error uploading data to server {server}: {error}"))
+                            .set_width(200.0)
+                            .set_height(200.0)
                             .set_closable(true)
-                            .set_duration(Some(Duration::from_secs(3)));
+                            .set_duration(None);
                     } else {
                         log::trace!("Configuration updated successfully for server {server}");
                     }
