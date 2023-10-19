@@ -13,7 +13,7 @@
 				"isDefault": true
 			},
 			"env": {
-				"RUST_LOG": "email_forward_script"
+				"RUST_LOG": "email_forward_manager"
 			}
 		}
 	]

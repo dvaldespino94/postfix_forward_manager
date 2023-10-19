@@ -985,7 +985,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "email-forward-script"
+name = "email-forward-manager"
 version = "0.1.0"
 dependencies = [
  "anyhow",
