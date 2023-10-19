@@ -6,8 +6,9 @@ use std::{
 };
 
 use eframe::{App, CreationContext};
-use egui::{FontFamily, Vec2};
-use egui_notify::Toasts;
+use egui::{Vec2, WidgetText};
+
+use egui_toast::{Toast, ToastKind, ToastOptions, Toasts};
 use figment::{
     providers::{Format, Toml},
     Figment,
@@ -119,10 +120,14 @@ impl App for Application {
                             s.users_status = UsersStatus::Downloading;
                         });
                     } else {
-                        self.toasts
-                            .error(format!("Authentication failed for server {server}"))
-                            .set_closable(true)
-                            .set_duration(Some(Duration::from_secs(3)));
+                        self.show_notification(
+                            format!("Authentication failed\nfor server {server}").into(),
+                            ToastKind::Error,
+                        );
+                        // self.toasts
+                        //     .error(format!("Authentication failed for server {server}"))
+                        //     .set_closable(true)
+                        //     .set_duration(Some(Duration::from_secs(3)));
                         log::error!(
                             "Authentication failed for server {server}: '{}'",
                             error.unwrap_or_default()
@@ -131,7 +136,7 @@ impl App for Application {
                 }
                 // Handle received virtual users hash
                 ResponseMessage::GotVirtualUsers { server, users } => {
-                    log::trace!("Got virtual users from server {server}: {users:#?}");
+                    log::trace!("Got virtual users\nfrom server {server}: {users:#?}");
 
                     // Match the received server instance with the server instances owned by the application
                     self.get_server(&server).map(|s| {
@@ -145,12 +150,12 @@ impl App for Application {
                         s.users_status = UsersStatus::Unknown;
                     });
 
-                    self.toasts
-                        .error(format!(
-                            "Couldn't upload configuration to server {server}: {error}"
-                        ))
-                        .set_closable(true)
-                        .set_duration(Some(Duration::from_secs(3)));
+                    self.show_notification(
+                        format!("Couldn't upload configuration\nto server {server}: {error}")
+                            .into(),
+                        ToastKind::Error,
+                    );
+
                     log::error!("Couldn't upload configuration to server {server}: {error}");
                 }
                 // Handle the result of server configuration uploads
@@ -161,12 +166,11 @@ impl App for Application {
 
                     if let Some(error) = error {
                         log::error!("Error uploading data to server {server}: {error}");
-                        self.toasts
-                            .error(format!("Error uploading data to server {server}: {error}"))
-                            .set_width(200.0)
-                            .set_height(200.0)
-                            .set_closable(true)
-                            .set_duration(None);
+
+                        self.show_notification(
+                            format!("Error uploading data to\nserver {server}: {error}").into(),
+                            ToastKind::Error,
+                        );
                     } else {
                         log::trace!("Configuration updated successfully for server {server}");
                     }
@@ -193,7 +197,7 @@ impl App for Application {
 
 impl Application {
     // Create a new instance of the application
-    pub fn new(ctx: &CreationContext) -> Self {
+    pub fn new(_ctx: &CreationContext) -> Self {
         // Load configuration from TOML
         let config: Configuration = Figment::new()
             .merge(Toml::file("config.toml"))
@@ -239,12 +243,7 @@ impl Application {
             screen: Default::default(),
             // Server list(loaded from configuration)
             servers: config.servers,
-            toasts: Toasts::default()
-                .with_anchor(egui_notify::Anchor::TopRight)
-                .with_default_font(egui::FontId {
-                    size: 10.0,
-                    family: FontFamily::Monospace,
-                }),
+            toasts: Toasts::new(),
         }
     }
 
@@ -263,5 +262,16 @@ impl Application {
         !(self.password.trim().is_empty()
             || self.root_password.trim().is_empty()
             || self.username.trim().is_empty())
+    }
+
+    fn show_notification(&mut self, message: WidgetText, kind: ToastKind) {
+        self.toasts.add(Toast {
+            kind,
+            text: message,
+            options: ToastOptions::default()
+                .duration_in_seconds(3.0)
+                .show_icon(true)
+                .show_progress(true),
+        });
     }
 }

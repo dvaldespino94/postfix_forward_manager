@@ -925,10 +925,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui-notify"
-version = "0.10.0"
+name = "egui-toast"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc3b10f21c7bb2afaecb8d98677cdb233a8b1f336b9b95abd610a33aeced04fc"
+checksum = "18207eb4ab0934f48a999ebe86699f2fdd2aa6b3670b1e6ad01cb744d5ac2481"
 dependencies = [
  "egui",
 ]
@@ -992,7 +992,7 @@ dependencies = [
  "build-target",
  "eframe",
  "egui",
- "egui-notify",
+ "egui-toast",
  "env_logger",
  "figment",
  "keyring",
