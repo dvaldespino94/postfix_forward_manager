@@ -16,3 +16,7 @@ log = "0.4.20"
 serde = { version = "1.0.189", features = ["derive"] }
 ssh-rs = { version = "0.4.3", features = ["deprecated-dh-group1-sha1", "scp"] }
 tempfile = "3.8.0"
+
+[build-dependencies]
+build-target = "0.4.0"
+winresource = "0.1.17"

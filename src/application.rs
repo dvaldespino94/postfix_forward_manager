@@ -5,8 +5,8 @@ use std::{
     time::Duration,
 };
 
-use eframe::App;
-use egui::Vec2;
+use eframe::{App, CreationContext};
+use egui::{include_image, TextureOptions, Vec2};
 use figment::{
     providers::{Format, Toml},
     Figment,
@@ -167,7 +167,7 @@ impl App for Application {
 
 impl Application {
     // Create a new instance of the application
-    pub fn new() -> Self {
+    pub fn new(ctx: &CreationContext) -> Self {
         // Load configuration from TOML
         let config: Configuration = Figment::new()
             .merge(Toml::file("config.toml"))
