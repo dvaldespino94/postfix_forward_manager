@@ -187,6 +187,20 @@ impl SSHWrapper {
         local_file.write_all(payload.as_bytes())?;
         local_file.flush()?;
 
+        // Create a backup for the remote configuration
+        let mut shell = client.open_shell()?;
+
+        let _ = shell.write(
+            format!(
+                "cp '{}' {}\n",
+                self.server.config_path,
+                format!("~/{configuration_filename}_`date \"+%Y-%m-%d_%H-%M-%S\"`.bak")
+            )
+            .as_bytes(),
+        )?;
+        std::thread::sleep(Duration::from_secs(2));
+        log::debug!("Result: {}", String::from_utf8(shell.read()?)?);
+
         // Create a scp client instance
         let scp = client.open_scp()?;
         // Upload the file

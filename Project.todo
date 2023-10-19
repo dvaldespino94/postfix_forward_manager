@@ -7,3 +7,4 @@
 //DONE: Add flag to Server struct to signal status of 'users' list
 //DONE: Move extra update thread to Application::new()
 //DONE: Add error notifications to main ui
+//DONE: Backup configuration before uploading to server
