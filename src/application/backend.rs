@@ -26,10 +26,7 @@ pub fn backend_loop(
                 if let Some(session) = ssh_sessions.get_mut(&server.to_string_extended()) {
                     match session.get_virtual_users() {
                         Ok(users) => {
-                            let _ = tx.send(ResponseMessage::GotVirtualUsers {
-                                server,
-                                users,
-                            });
+                            let _ = tx.send(ResponseMessage::GotVirtualUsers { server, users });
                         }
                         Err(error) => {
                             log::error!("Error getting virtual users: {error:?}");

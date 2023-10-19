@@ -4,6 +4,7 @@ use eframe::IconData;
 use egui::Vec2;
 use std::error::Error;
 mod application;
+mod cache_utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
