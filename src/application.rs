@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use eframe::{App, CreationContext, NativeOptions};
+use eframe::{App, CreationContext};
 use egui::{Vec2, WidgetText};
 
 use egui_toast::{Toast, ToastKind, ToastOptions, Toasts};
@@ -163,19 +163,16 @@ impl App for Application {
         }
 
         // Draw the actual stuffs
-        egui::CentralPanel::default().show(ctx, |ui| match self.screen {
+        match self.screen {
             Screen::Login => {
-                // Resize the window for the login view
-                frame.set_window_size(Vec2::new(400.0, 130.0));
-
                 // Draw the login view
-                let _ = self.draw_login(ui);
+                let _ = self.draw_login(&ctx, frame);
             }
             Screen::Main => {
                 // Draw the main view
-                let _ = self.draw_main(ui);
+                let _ = self.draw_main(&ctx, frame);
             }
-        });
+        }
     }
 }
 
