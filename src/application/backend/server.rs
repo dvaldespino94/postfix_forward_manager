@@ -5,6 +5,30 @@ use std::{
 
 use serde::Deserialize;
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum AuthStatus {
+    Unknown,
+    Failed,
+    Authenticated,
+    InProgress,
+}
+
+impl Default for AuthStatus {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
+impl From<bool> for AuthStatus {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::Authenticated
+        } else {
+            Self::Failed
+        }
+    }
+}
+
 // Struct to hold information about the servers and throw it around between threads
 #[derive(Clone, Deserialize)]
 pub struct Server {
@@ -18,12 +42,18 @@ pub struct Server {
     // Store the loaded data from the server, it's not serialized so it must be skipped
     #[serde(skip)]
     pub users: HashMap<String, Vec<String>>,
+
     // Flags if the data has already been filled from the server
     #[serde(skip)]
     pub received_redirections: bool,
+
+    // Authentication status
+    #[serde(skip)]
+    pub auth_status: AuthStatus,
+
     // Flag to check if the server is still working
     #[serde(skip)]
-    pub busy: bool,
+    pub is_busy: bool,
 }
 
 // Compare two server instances, only taking into account the path, address and port
@@ -46,6 +76,10 @@ impl Server {
 
     pub fn to_string_extended(&self) -> String {
         format!("{}:{}:{}", self.addr, self.port, self.config_path)
+    }
+
+    pub fn busy(&self)->bool{
+        self.auth_status==AuthStatus::InProgress
     }
 }
 

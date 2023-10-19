@@ -27,7 +27,7 @@ impl Application {
         // Simple variable to hold the selected server instance's index
         let mut selected_server: usize = get_cache_value("current_server", ui);
 
-        let some_server_is_busy = self.servers.iter().any(|x| x.busy);
+        let some_server_is_busy = self.servers.iter().any(|x| x.busy());
 
         // Horizontal widget to show the server selection buttons
         ui.horizontal(|ui| {
@@ -83,7 +83,8 @@ impl Application {
                                 log::trace!("Saving...");
 
                                 // Mark the server as busy
-                                self.servers[selected_server].busy = true;
+                                //TODO: Mark as busy
+                                // self.servers[selected_server].busy = true;
 
                                 // Send a query to the backend, so it handles the heavy stuffs
                                 let _ = self.tx.send(QueryMessage::UpdateVirtualUsers(
@@ -94,7 +95,7 @@ impl Application {
                     );
 
                     // Show a spinner if the backend is still uploading the data to the server
-                    if self.servers.iter().any(|x| x.busy) {
+                    if self.servers.iter().any(|x| x.busy()) {
                         ui.spinner();
                     }
                 });

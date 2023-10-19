@@ -1,6 +1,6 @@
 use std::{error::Error, process::exit};
 
-use super::{Application, QueryMessage};
+use super::{backend::server::AuthStatus, Application, QueryMessage};
 
 // Implementation for the application's login ui
 impl Application {
@@ -31,30 +31,53 @@ impl Application {
         ui.horizontal(|ui| {
             // Only enable the login button if the form data is valid
             ui.add_enabled_ui(self.login_form_is_valid(), |ui| {
-                if self.servers.iter().any(|x| x.busy) {
+                if self.servers.iter().any(|x| x.busy()) {
                     // If there is a login in progress show a spinner or checkmark for each instance
 
                     ui.horizontal(|ui| {
                         for server in self.servers.iter() {
-                            if server.busy {
-                                ui.spinner();
-                            } else {
-                                ui.label("✅");
-                            }
+                            match server.auth_status {
+                                AuthStatus::Unknown => {
+                                    ui.label("❓");
+                                }
+                                AuthStatus::Failed => {
+                                    ui.label("❌");
+                                }
+                                AuthStatus::Authenticated => {
+                                    ui.label("✅");
+                                }
+                                AuthStatus::InProgress => {
+                                    ui.spinner();
+                                }
+                            };
                         }
                     });
                 } else {
                     // Add the login button
                     if ui.button("Ok").clicked() {
                         for server in self.servers.iter_mut() {
-                            server.busy = true;
+                            if server.auth_status == AuthStatus::Authenticated {
+                                continue;
+                            }
+
+                            server.auth_status = AuthStatus::InProgress;
                         }
 
                         // Send a query to the backend
                         let _ = self.tx.send(QueryMessage::Authenticate {
                             username: self.username.clone(),
                             password: self.password.clone(),
-                            servers: self.servers.clone(),
+                            servers: self
+                                .servers
+                                .iter()
+                                .filter_map(|x| {
+                                    if x.auth_status == AuthStatus::Authenticated {
+                                        None
+                                    } else {
+                                        Some(x.clone())
+                                    }
+                                })
+                                .collect(),
                             root_password: self.root_password.clone(),
                         });
                     }

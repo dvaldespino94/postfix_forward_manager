@@ -6,7 +6,8 @@ use std::{
 };
 
 use eframe::{App, CreationContext};
-use egui::Vec2;
+use egui::{FontFamily, Vec2};
+use egui_notify::{Toast, Toasts};
 use figment::{
     providers::{Format, Toml},
     Figment,
@@ -51,10 +52,14 @@ pub struct Application {
     rx: Receiver<ResponseMessage>,
     // This field also must die soon
     servers: Vec<Server>,
+    // Toasts 🍞
+    toasts: Toasts,
 }
 
 impl App for Application {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        self.toasts.show(ctx);
+
         // Spawn a thread that forces to update the ui every 200ms
         ctx.memory_mut(|mem| {
             let already_started: &mut bool = mem
@@ -84,16 +89,14 @@ impl App for Application {
                     success,
                     error,
                 } => {
-                    if success {
-                        for owned_server in self.servers.iter_mut() {
-                            if owned_server == &server {
-                                owned_server.busy = false;
-                                break;
-                            }
-                        }
+                    self.get_server(&server).map(|s| {
+                        log::trace!("Setting server to not busy");
+                        s.auth_status = success.into();
+                    });
 
+                    if success {
                         log::trace!("Authentication result for server {server}: {success}");
-                        if !self.servers.iter().any(|server| server.busy) {
+                        if !self.servers.iter().any(|server| server.busy()) {
                             // Resize window
                             frame.set_window_size(Vec2::new(400.0, 500.0));
 
@@ -103,7 +106,10 @@ impl App for Application {
                         // Query virtual users for this server
                         let _ = self.tx.send(QueryMessage::QueryVirtualUsers(server));
                     } else {
-                        //TODO: Show authentication failed message
+                        self.toasts
+                            .error(format!("Authentication failed for server {server}"))
+                            .set_closable(true)
+                            .set_duration(Some(Duration::from_secs(3)));
                         log::error!(
                             "Authentication failed for server {server}: '{}'",
                             error.unwrap_or_default()
@@ -115,32 +121,34 @@ impl App for Application {
                     log::trace!("Got virtual users from server {server}: {users:#?}");
 
                     // Match the received server instance with the server instances owned by the application
-                    for owned_server in self.servers.iter_mut() {
-                        if *owned_server == server {
-                            // Raise the flag
-                            owned_server.received_redirections = true;
-                            // Assign the users
-                            owned_server.users = users;
-                            break;
-                        }
-                    }
+                    self.get_server(&server).map(|s| {
+                        s.users = users;
+                        s.received_redirections = true;
+                    });
                 }
                 // Handle the case when the query fails
                 ResponseMessage::QueryVirtualUsersResult { server, error } => {
-                    //TODO: Show error info
+                    self.toasts
+                        .error(format!(
+                            "Couldn't upload configuration to server {server}: {error}"
+                        ))
+                        .set_closable(true)
+                        .set_duration(Some(Duration::from_secs(3)));
                     log::error!("Couldn't upload configuration to server {server}: {error}");
                 }
                 // Handle the result of server configuration uploads
                 ResponseMessage::ServerUploadResult { error, server } => {
-                    for owned_server in self.servers.iter_mut() {
-                        if owned_server == &server {
-                            owned_server.busy = false;
-                            break;
-                        }
-                    }
+                    // self.get_server(&server).map(|s| {
+                    //     log::trace!("Setting server to not busy");
+                    //     s.busy = false;
+                    // });
 
                     if let Some(error) = error {
                         log::error!("Error uploading data to server {server}: {error}");
+                        self.toasts
+                            .error(format!("Error uploading data to server {server}: {error}"))
+                            .set_closable(true)
+                            .set_duration(Some(Duration::from_secs(3)));
                     } else {
                         log::trace!("Configuration updated successfully for server {server}");
                     }
@@ -152,7 +160,7 @@ impl App for Application {
         egui::CentralPanel::default().show(ctx, |ui| match self.screen {
             Screen::Login => {
                 // Resize the window for the login view
-                frame.set_window_size(Vec2::new(300.0, 130.0));
+                frame.set_window_size(Vec2::new(400.0, 130.0));
 
                 // Draw the login view
                 let _ = self.draw_login(ui);
@@ -167,7 +175,7 @@ impl App for Application {
 
 impl Application {
     // Create a new instance of the application
-    pub fn new(_: &CreationContext) -> Self {
+    pub fn new(ctx: &CreationContext) -> Self {
         // Load configuration from TOML
         let config: Configuration = Figment::new()
             .merge(Toml::file("config.toml"))
@@ -213,7 +221,23 @@ impl Application {
             screen: Default::default(),
             // Server list(loaded from configuration)
             servers: config.servers,
+            toasts: Toasts::default()
+                .with_anchor(egui_notify::Anchor::TopRight)
+                .with_default_font(egui::FontId {
+                    size: 10.0,
+                    family: FontFamily::Monospace,
+                }),
         }
+    }
+
+    fn get_server(&mut self, server: &Server) -> Option<&mut Server> {
+        for owned_server in self.servers.iter_mut() {
+            if owned_server == server {
+                return Some(owned_server);
+            }
+        }
+
+        None
     }
 
     // Get whether the current data is valid to allow the user click the Ok button

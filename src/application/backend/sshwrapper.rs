@@ -42,7 +42,7 @@ impl SSHWrapper {
         // Try to create a session
         match ssh::create_session()
             // Using 2 seconds timeout seems to be enough
-            .timeout(Some(Duration::from_secs(2)))
+            .timeout(Some(Duration::from_secs(5)))
             // Set the username
             .username(&self.username)
             // password

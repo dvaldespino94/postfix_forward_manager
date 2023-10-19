@@ -2,3 +2,7 @@
 //DONE: Remove Application::login_in_process
 //DONE: Remove Application::waiting_for_upload
 //DONE: Reload postfix configuration on target servers (run /etc/postfix/postfix_update)
+//DONE: Add error notifications to login
+//DONE: Allow the user to re-try if authentication fails
+//TODO: Move extra update thread to Application::new()
+//TODO: Add error notifications to main ui

@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::server::Server;
+use super::server::{Server, AuthStatus};
 
 // Store the app configuration (to be loaded from TOML, JSON, etc...)
 #[derive(Deserialize)]
@@ -23,7 +23,8 @@ impl Default for Configuration {
                 port: 22,
                 users: Default::default(),
                 received_redirections: false,
-                busy: false,
+                is_busy: false,
+                auth_status: AuthStatus::Unknown,
             }],
         }
     }
