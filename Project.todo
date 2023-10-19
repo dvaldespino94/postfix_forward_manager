@@ -1,0 +1,3 @@
+//DONE: Spawn a thread on the login process that updates the ui every 100ms, so the transition from Screen::Login to Screen::Main doesn't need the user's interaction
+//DONE: Remove Application::login_in_process
+//DONE: Remove Application::waiting_for_upload

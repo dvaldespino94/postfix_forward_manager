@@ -1,0 +1,18 @@
+[package]
+name = "email-forward-script"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.75"
+eframe = "0.23.0"
+egui = "0.23.0"
+env_logger = "0.10.0"
+figment = { version = "0.10.11", features = ["toml"] }
+keyring = "2.0.5"
+log = "0.4.20"
+serde = { version = "1.0.189", features = ["derive"] }
+ssh-rs = { version = "0.4.3", features = ["deprecated-dh-group1-sha1", "scp"] }
+tempfile = "3.8.0"
